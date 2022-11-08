@@ -2,12 +2,15 @@ import sys
 import string
 import random
 
+from struct import *
+MAX_SIZE = pow(2,8)
+
 def inputfile_generator():
     f1 = open("./1.in", "w")
     f2 = open("./2.in", "w")
     
-    rnd1 = input_generator(1000)
-    rnd2 = input_generator(100000)
+    rnd1 = input_generator(100000)
+    rnd2 = input_generator(1000000)
     
     f1.write(rnd1)
     f2.write(rnd2)
@@ -37,7 +40,7 @@ def alphabets(version):
     all_sum = english + digits + special
     
     # init index and dict
-    index = int(1)
+    index = int(0)
     dictionary = {}
 
     # make dict
@@ -64,7 +67,8 @@ def compression(input, dictionary):
             # dict code for w to output
             encoded.append(en_dict[w])
             # add (w + c) to dict
-            en_dict[w+c] = len(en_dict) + 1
+            if len(en_dict) < MAX_SIZE:
+                en_dict[w+c] = len(en_dict)
             w = c
     # add last character
     encoded.append(en_dict[w])
@@ -72,6 +76,7 @@ def compression(input, dictionary):
 
     return en_dict, encoded
 def uncompression(input, dictionary):
+    dict_size = 256 # dictionary size
     de_dict = dictionary
     decoded = []
     old = input[0] # first input idx
@@ -85,7 +90,7 @@ def uncompression(input, dictionary):
         else:
             s = w + w[0] # translation of old
         decoded.append(s)
-        de_dict[len(de_dict)+1] = w + s[0]
+        de_dict[len(de_dict)] = w + s[0]
         w = s
 
     return de_dict, decoded
@@ -95,28 +100,44 @@ def main():
     args = sys.argv
     version = int(args[1]); inputfile = str(args[2]); outputfile = str(args[3])
 
-    input = open(inputfile, "r")
-    output = open(outputfile, "w")
+    # get file; input and output
+    input = None ; output = None
 
+    if version == 1:
+        input = open(inputfile, "r")
+        output = open(outputfile, "wb")
+    if version == 2:
+        input = open(inputfile, "rb")
+        output = open(outputfile, "w")
+    
     # make dictionary for encoding
     dictionary = alphabets(version)
     
     if version == 1:
         en_dict, encoded = compression(input.read(), dictionary)
     if version == 2:
-        int_arr = [int(x) for x in input.read().split(",")] # change the str type to int
-        de_dict, decoded = uncompression(int_arr, dictionary)
-    
+        comp_data = []
+        while True:
+            rec = input.read(1)
+            if len(rec) != 1:
+                break
+            (data, ) = unpack('>B', rec)
+            comp_data.append(data)
+        de_dict, decoded = uncompression(comp_data, dictionary)
+    # print(len(en_dict))
+    # print(len(de_dict))
 
     # # write the output
     if version == 1:
-        init = 0
         for e in encoded:
-            if init == 0:
-                output.write(str(e))
-                init = 1
-            else:
-                output.write("," + str(e))
+            output.write(pack('>B', int(e)))
+        # init = 0
+        # for e in encoded:
+        #     if init == 0:
+        #         output.write(str(e))
+        #         init = 1
+        #     else:
+        #         output.write("," + str(e))
     
     if version == 2:
         for d in decoded:
@@ -127,7 +148,7 @@ def main():
     output.close()
 if __name__ == "__main__":
     # dictionary = alphabets()
-    # file_generator()
+    # inputfile_generator()
     # rnd = input_generator(100)
     main()
     # tmp = alphabets(2)

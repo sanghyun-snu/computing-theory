@@ -29,7 +29,7 @@ def input_generator(size):
 
     return rnd_string
 
-def alphabets():
+def alphabets(version):
     # make alphabet sum list
     english = string.ascii_letters
     digits = string.digits
@@ -41,16 +41,20 @@ def alphabets():
     dictionary = {}
 
     # make dict
-    for c in all_sum:
-        dictionary[c] = index
-        index += 1
-    
+    if version == 1:
+        for c in all_sum:
+            dictionary[c] = index
+            index += 1
+    if version == 2:
+        for c in all_sum:
+            dictionary[index] = c
+            index += 1
+        
     return dictionary
 
 
 def compression(input, dictionary):
     en_dict = dictionary
-    print(en_dict)
     encoded = []
     w = "" # init string
     for c in input:
@@ -67,10 +71,24 @@ def compression(input, dictionary):
     # for i in input:
 
     return en_dict, encoded
-def uncompression(input):
+def uncompression(input, dictionary):
+    de_dict = dictionary
     decoded = []
-    
-    return decoded
+    old = input[0] # first input idx
+    s = de_dict[old] # first alphabet
+    w = s
+    decoded.append(s) # output the first alphabet
+    # w = entry 
+    for idx in input[1:]:
+        if idx in de_dict:
+            s = de_dict[idx] # translation of idx
+        else:
+            s = w + w[0] # translation of old
+        decoded.append(s)
+        de_dict[len(de_dict)+1] = w + s[0]
+        w = s
+
+    return de_dict, decoded
 
 def main():
     # argument parsing
@@ -81,18 +99,28 @@ def main():
     output = open(outputfile, "w")
 
     # make dictionary for encoding
-    dictionary = alphabets()
-
+    dictionary = alphabets(version)
+    
     if version == 1:
         en_dict, encoded = compression(input.read(), dictionary)
     if version == 2:
-        de_input = uncompression(input.read(), )
+        int_arr = [int(x) for x in input.read().split(",")] # change the str type to int
+        de_dict, decoded = uncompression(int_arr, dictionary)
     
 
-    # write the output
-    output.write(str(en_dict))
-    output.write("\n")
-    output.write(str(encoded))
+    # # write the output
+    if version == 1:
+        init = 0
+        for e in encoded:
+            if init == 0:
+                output.write(str(e))
+                init = 1
+            else:
+                output.write("," + str(e))
+    
+    if version == 2:
+        for d in decoded:
+            output.write(str(d))
 
     # close the file object
     input.close()
@@ -102,3 +130,5 @@ if __name__ == "__main__":
     # file_generator()
     # rnd = input_generator(100)
     main()
+    # tmp = alphabets(2)
+    # print(tmp)

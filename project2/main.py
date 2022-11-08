@@ -75,8 +75,7 @@ def compression(input, dictionary):
     # for i in input:
 
     return en_dict, encoded
-def uncompression(input, dictionary):
-    dict_size = 256 # dictionary size
+def decompression(input, dictionary):
     de_dict = dictionary
     decoded = []
     old = input[0] # first input idx
@@ -123,7 +122,7 @@ def main():
                 break
             (data, ) = unpack('>B', rec)
             comp_data.append(data)
-        de_dict, decoded = uncompression(comp_data, dictionary)
+        de_dict, decoded = decompression(comp_data, dictionary)
     # print(len(en_dict))
     # print(len(de_dict))
 
